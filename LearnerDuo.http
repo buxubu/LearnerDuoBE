@@ -1,0 +1,6 @@
+@LearnerDuo_HostAddress = http://localhost:5213
+
+GET {{LearnerDuo_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
