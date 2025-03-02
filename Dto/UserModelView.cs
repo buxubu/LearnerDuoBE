@@ -38,41 +38,33 @@ namespace LearnerDuo.ModelViews
 
     public class MemberDto
     {
-        public int UserId { get; set; }
+        public int Id { get; set; }
         public string UserName { get; set; }
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public string? PhotoUrl {  get; set; }
-        public string? City { get; set; }
-        public string? Country { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string PhotoUrl {  get; set; }
+        public string City { get; set; }
+        public string Country { get; set; }
         public DateTime? Created { get; set; }
         public int Age { get; set; }
-        public string? Gender { get; set; }
-        public string? LookingFor { get; set; }
-        public string? Interests { get; set; }
-        public string? KnownAs { get; set; }
-        public string? Description { get; set; }
+        public string Gender { get; set; }
+        public string LookingFor { get; set; }
+        public string Interests { get; set; }
+        public string KnownAs { get; set; }
+        public string Description { get; set; }
         public DateTime? LastActive { get; set; } 
-        public string? Status { get; set; }
+        public string Status { get; set; }
         public int? Coin { get; set; }
         public int? Price { get; set; }
 
-        public virtual ICollection<PhotoDto>? Photos { get; set; }
+        public virtual ICollection<PhotoDto> Photos { get; set; }
 
 
     }
 
-    public class UserParams
+    public class UserParams : PaginationParams
     {
-        private const int MaxPageSize = 50;
-        public int PageNumber { get; set; } = 1;   
-        private int pageSize = 10;
-
-        public int PageSize
-        {
-            get => pageSize;
-            set => pageSize = (value > MaxPageSize) ? MaxPageSize : value;
-        }
+        
         public string Gender { get; set; }
         public int MinAge { get; set; } = 18;
         public int MaxAge { get; set; } = 150;

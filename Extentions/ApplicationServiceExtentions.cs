@@ -2,6 +2,8 @@
 using LearnerDuo.Data;
 using LearnerDuo.Helper;
 using LearnerDuo.Services;
+using LearnerDuo.SignalIR;
+using LearnerDuo.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -19,13 +21,20 @@ namespace LearnerDuo.Extentions
             services.AddCors(o => o.AddPolicy(name: "LearnerDuo",
                 policy =>
                 {
-                    policy.WithOrigins("http://localhost:4200").AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                    // alowCredentials is for SignalIR
+                    policy.WithOrigins("http://localhost:4200").AllowCredentials().AllowAnyMethod().AllowAnyHeader();
                 }));
 
+            //signnalR
+            services.AddSingleton<PresenceTracker>();
             services.AddScoped(typeof(IReponsitoryService<>), typeof(ReponsitoryService<>));
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IPhotoService, PhotoService>();
+            services.AddScoped<IMessageService, MessageService>();
+            services.AddScoped<IAdminService, AdminService>();
+
+            services.AddScoped<ILikesService, LikesService>();
 
             services.AddScoped<LogUserActivity>();
 

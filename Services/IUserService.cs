@@ -24,6 +24,7 @@ namespace LearnerDuo.Services
         Task<UserToken> Login(Login model);
         Task<UserToken> Register(Register model);
         Task<PagedList<MemberDto>> GetUsers(UserParams userParams);
+        Task<string> GetGenderUser(string userName);
         Task<MemberDto> Detail(string name);
         Task<MemberDto> FindUser(string userName);
         Task<MemberDto> FindUserId(int userId);
@@ -42,37 +43,38 @@ namespace LearnerDuo.Services
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IPhotoService _photoService;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
 
-        public UserService(LearnerDuoContext db, ITokenService tokenService, IMapper mapper, IHttpContextAccessor httpContextAccessor,
-                           IPhotoService photoService)
+        public UserService(ITokenService tokenService, IMapper mapper, IHttpContextAccessor httpContextAccessor,
+                           IPhotoService photoService, UserManager<User> userManager, SignInManager<User> signInManager,
+                           LearnerDuoContext db)
         {
-            _db = db;
             _tokenService = tokenService;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _photoService = photoService;
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _db = db;
         }
 
         public async Task<UserToken> Login(Login model)
         {
-            var user = await _db.Users.Include(x => x.Photos)
+            var user = await _userManager.Users.Include(x => x.Photos)
                                        .AsNoTracking()
                                        .SingleOrDefaultAsync(x => x.UserName == model.UserName);
 
             if (user == null) return null;
 
-            using var hmac = new HMACSHA512(user.PasswordSalt);
+            var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false); // update here
 
-            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(model.Password));
+            if (!result.Succeeded) return null;
 
-            for (int i = 0; i < computedHash.Length; i++)
-            {
-                if (computedHash[i] != user.PasswordHash[i]) return null;
-            }
             return new UserToken
             {
                 UserName = user.UserName,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain == true)?.Url,
                 KnownAs = user.KnownAs,
                 Gender = user.Gender
@@ -88,16 +90,17 @@ namespace LearnerDuo.Services
             var user = _mapper.Map<User>(model);
 
             user.UserName = model.UserName.ToLower();
-            user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(model.Password));
-            user.PasswordSalt = hmac.Key;
 
+            var result = await _userManager.CreateAsync(user, model.Password); // when use UserManager, we don't need to Add or SaveChanges
+            if (!result.Succeeded) return null;
 
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
+            var addUserRole = await _userManager.AddToRoleAsync(user, "Member");
+            if (addUserRole == null) return null;
+
             return new UserToken
             {
                 UserName = model.UserName,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain == true)?.Url,
                 KnownAs = user.KnownAs,
                 Gender = user.Gender
@@ -183,7 +186,7 @@ namespace LearnerDuo.Services
             {
                 Url = result.SecureUrl.AbsoluteUri,
                 PublicId = result.PublicId,
-                UserId = user.UserId
+                UserId = user.Id
             };
 
             if (user.Photos.Count == 0)
@@ -264,9 +267,9 @@ namespace LearnerDuo.Services
 
         public async Task UpdateUserDb(MemberDto memberDto)
         {
-            var users = await _db.Users.FindAsync(memberDto.UserId);
+            var users = await _db.Users.FindAsync(memberDto.Id);
 
-            users.LastActive = memberDto.LastActive;
+            users.LastActive = memberDto.LastActive.Value;
 
             _db.Update(users);
             await _db.SaveChangesAsync();
@@ -279,9 +282,14 @@ namespace LearnerDuo.Services
 
         public async Task<MemberDto> FindUserId(int userId)
         {
-            return await _db.Users.Where(x => x.UserId == userId)
+            return await _db.Users.Where(x => x.Id == userId)
                             .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
                             .SingleOrDefaultAsync();
+        }
+
+        public async Task<string> GetGenderUser(string userName)
+        {
+            return await _db.Users.Where(x => x.UserName == userName).Select(g=>g.Gender).FirstOrDefaultAsync();
         }
     }
 }

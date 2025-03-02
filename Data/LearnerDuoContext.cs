@@ -1,4 +1,6 @@
 ﻿using LearnerDuo.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using System.Security.Cryptography;
@@ -8,14 +10,21 @@ using System.Text.Json.Serialization;
 
 namespace LearnerDuo.Data
 {
-    public class LearnerDuoContext : DbContext
+    public class LearnerDuoContext : IdentityDbContext<User, Role, int,
+                IdentityUserClaim<int>, UserRole, IdentityUserLogin<int>,
+                IdentityRoleClaim<int>, IdentityUserToken<int>>
     {
         public LearnerDuoContext(DbContextOptions options) : base(options)
         {
         }
 
-        public DbSet<User> Users { get; set; }
         public DbSet<Photo> Photos { get; set; }
+
+        public DbSet<UserLike> Likes { get; set; }
+        public DbSet<Message> Messages { get; set; }
+
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<Connection> Connections { get; set; }
 
         override protected void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,9 +34,9 @@ namespace LearnerDuo.Data
             {
                 entity.ToTable("Users");
 
-                entity.Property(u => u.UserId)
+                entity.Property(u => u.Id)
                       .UseIdentityColumn(1, 1);
-                entity.HasKey(u => u.UserId);
+                entity.HasKey(u => u.Id);
 
                 entity.Property(u => u.UserName)
                     .HasColumnType("nvarchar")
@@ -88,6 +97,21 @@ namespace LearnerDuo.Data
                 entity.Property(u => u.LastActive)
                         .HasColumnType("datetime");
 
+                entity.HasMany(ur => ur.UserRoles)
+                      .WithOne(u => u.User)
+                      .HasForeignKey(ur => ur.UserId)
+                      .IsRequired()
+                      .HasConstraintName("FK_User_UserRole");
+
+            });
+
+            modelBuilder.Entity<Role>(entity =>
+            {
+                entity.HasMany(ur => ur.UserRoles)
+                      .WithOne(u => u.Role)
+                      .HasForeignKey(ur => ur.RoleId)
+                      .IsRequired()
+                      .HasConstraintName("FK_Role_UserRole");
             });
 
             modelBuilder.Entity<Photo>(entity =>
@@ -106,6 +130,31 @@ namespace LearnerDuo.Data
                 entity.Property(p => p.PublicId)
                         .HasColumnType("nvarchar(MAX)");
             });
+
+            modelBuilder.Entity<UserLike>()
+                        .HasKey(k => new { k.SourceUserId, k.LikedUserId });
+
+            modelBuilder.Entity<UserLike>()
+                        .HasOne(s => s.SourceUser)
+                        .WithMany(l => l.LikedUsers)
+                        .HasForeignKey(s => s.SourceUserId)
+                        .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<UserLike>()
+                        .HasOne(s => s.LikedUser)
+                        .WithMany(l => l.LikedByUsers)
+                        .HasForeignKey(s => s.LikedUserId)
+                        .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Message>()
+                        .HasOne(s => s.Sender)
+                        .WithMany(m => m.MessagesSent)
+                        .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Message>()
+                        .HasOne(s => s.Recipient)
+                        .WithMany(m => m.MessagesReceived)
+                        .OnDelete(DeleteBehavior.Restrict);
 
         }
     }

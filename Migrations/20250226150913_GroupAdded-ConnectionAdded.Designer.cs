@@ -4,6 +4,7 @@ using LearnerDuo.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LearnerDuo.Migrations
 {
     [DbContext(typeof(LearnerDuoContext))]
-    partial class LearnerDuoContextModelSnapshot : ModelSnapshot
+    [Migration("20250226150913_GroupAdded-ConnectionAdded")]
+    partial class GroupAddedConnectionAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

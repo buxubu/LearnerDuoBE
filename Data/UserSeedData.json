@@ -1,6 +1,5 @@
 [
   {
-    "UserId": 0,
     "UserName": "Toni",
     "FirstName": "Theresa",
     "LastName": "Winters",
@@ -18,7 +17,6 @@
     "Price": 80,
     "Photos": [
       {
-        "PhotoId": 0,
         "Url": "https://randomuser.me/api/portraits/women/82.jpg",
         "IsMain": true
       }

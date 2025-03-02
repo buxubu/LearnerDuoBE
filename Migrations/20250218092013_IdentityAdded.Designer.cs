@@ -4,6 +4,7 @@ using LearnerDuo.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LearnerDuo.Migrations
 {
     [DbContext(typeof(LearnerDuoContext))]
-    partial class LearnerDuoContextModelSnapshot : ModelSnapshot
+    [Migration("20250218092013_IdentityAdded")]
+    partial class IdentityAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,34 +24,6 @@ namespace LearnerDuo.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("LearnerDuo.Models.Connection", b =>
-                {
-                    b.Property<string>("ConnectionId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("GroupName")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("UserName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("ConnectionId");
-
-                    b.HasIndex("GroupName");
-
-                    b.ToTable("Connections");
-                });
-
-            modelBuilder.Entity("LearnerDuo.Models.Group", b =>
-                {
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Name");
-
-                    b.ToTable("Groups");
-                });
 
             modelBuilder.Entity("LearnerDuo.Models.Message", b =>
                 {
@@ -59,6 +34,7 @@ namespace LearnerDuo.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MessageId"));
 
                     b.Property<string>("Content")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("DateRead")
@@ -74,15 +50,17 @@ namespace LearnerDuo.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("RecipientUsername")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("SenderDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("SenderId")
+                    b.Property<int>("SenderId")
                         .HasColumnType("int");
 
                     b.Property<string>("SenderUsername")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("MessageId");
@@ -162,14 +140,14 @@ namespace LearnerDuo.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("Birthday")
+                    b.Property<DateTime?>("Birthday")
                         .HasColumnType("datetime");
 
                     b.Property<string>("City")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar");
 
-                    b.Property<int>("Coin")
+                    b.Property<int?>("Coin")
                         .HasColumnType("integer");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -180,7 +158,7 @@ namespace LearnerDuo.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar");
 
-                    b.Property<DateTime>("Created")
+                    b.Property<DateTime?>("Created")
                         .HasColumnType("datetime");
 
                     b.Property<string>("Description")
@@ -209,7 +187,7 @@ namespace LearnerDuo.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar");
 
-                    b.Property<DateTime>("LastActive")
+                    b.Property<DateTime?>("LastActive")
                         .HasColumnType("datetime");
 
                     b.Property<string>("LastName")
@@ -243,7 +221,7 @@ namespace LearnerDuo.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<int>("Price")
+                    b.Property<int?>("Price")
                         .HasColumnType("integer");
 
                     b.Property<string>("SecurityStamp")
@@ -391,13 +369,6 @@ namespace LearnerDuo.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("LearnerDuo.Models.Connection", b =>
-                {
-                    b.HasOne("LearnerDuo.Models.Group", null)
-                        .WithMany("Connections")
-                        .HasForeignKey("GroupName");
-                });
-
             modelBuilder.Entity("LearnerDuo.Models.Message", b =>
                 {
                     b.HasOne("LearnerDuo.Models.User", "Recipient")
@@ -409,7 +380,8 @@ namespace LearnerDuo.Migrations
                     b.HasOne("LearnerDuo.Models.User", "Sender")
                         .WithMany("MessagesSent")
                         .HasForeignKey("SenderId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Recipient");
 
@@ -501,11 +473,6 @@ namespace LearnerDuo.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("LearnerDuo.Models.Group", b =>
-                {
-                    b.Navigation("Connections");
                 });
 
             modelBuilder.Entity("LearnerDuo.Models.Role", b =>

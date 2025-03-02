@@ -26,6 +26,7 @@ namespace LearnerDuo.Controllers
         {
             _userService = userService;
         }
+
         [AllowAnonymous]
         [HttpPost]
         [Route("register")]
@@ -42,6 +43,7 @@ namespace LearnerDuo.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message.ToString());
             }
         }
+
         [AllowAnonymous]
         [HttpPost]
         [Route("login")]
@@ -52,13 +54,18 @@ namespace LearnerDuo.Controllers
             return Ok(userDto);
         }
 
+        //[Authorize(Roles = "Admin")]
         [HttpGet]
         [Route("getUsers")]
         public async Task<IActionResult> GetUsers([FromQuery] UserParams userParams)
         {
             try
             {
-                if (userParams.Gender == null) userParams.Gender = userParams.Gender == "male" ? "female" : "male";
+                // we can use this to get opposite gender but we already handle this in the client side
+
+                //var userGender = _userService.GetGenderUser(User.GetUserName());
+
+                //if (!string.IsNullOrEmpty(userParams.Gender)) userParams.Gender = userGender.ToString() == "male" ? "female" : "male";
                 // receive value from PageList<T> we created recently a class to handle the pagination
                 var users = await _userService.GetUsers(userParams);
 
@@ -88,7 +95,7 @@ namespace LearnerDuo.Controllers
             }
         }
 
-
+        [Authorize(Roles = "Member")]
         [HttpGet]
         [Route("findUser/{userName}")]
         public async Task<IActionResult> FindUser(string userName)
